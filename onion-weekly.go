@@ -26,9 +26,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Static("/", "./public")
-	e.GET("/hello", web.HelloHandler).Name = "get-hello"
-	e.POST("/createTestUser", web.PostTestUserHandler).Name = "create-test-user"
-	e.POST("/createTestToken", web.PostTestTokenHandler).Name = "create-test-token"
+	web.RegisterAuthHandlers(e.Group("/auth"))
+	web.RegisterHelloHandlers(e.Group("/hello"))
 	// FIXME
 	e.Debug = true
 	e.Logger.Fatal(e.Start(":1323"))

@@ -10,7 +10,11 @@ type Hello struct {
 	World string `json:"world"`
 }
 
-func HelloHandler(c echo.Context) error {
+func RegisterHelloHandlers(g *echo.Group) {
+	g.GET("/", handleHello)
+}
+
+func handleHello(c echo.Context) error {
 	h := &Hello{
 		Hello: "Go Programming",
 		World: "Fun!",

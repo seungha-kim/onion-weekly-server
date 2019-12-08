@@ -9,22 +9,26 @@ import (
 )
 
 // language=PostgreSQL
-const sqlInsertUsers = `insert into users (id)
+const sqlInsertUsers = `
+insert into users (id)
 values (default) 
 returning id, created_at;`
 
 // language=PostgreSQL
-const sqlInsertEmailCredentials = `insert into email_credentials (user_id, email, hashed_password) 
+const sqlInsertEmailCredentials = `
+insert into email_credentials (user_id, email, hashed_password) 
 values ($1, $2, $3) 
 returning user_id, email, hashed_password, created_at;`
 
 // language=PostgreSQL
-const sqlInsertUserProfiles = `insert into user_profiles (user_id, full_name)
+const sqlInsertUserProfiles = `
+insert into user_profiles (user_id, full_name)
 values ($1, $2)
 returning user_id, full_name;`
 
 // language=PostgreSQL
-const sqlSelectEmailCredentialsByEmail = `select e.user_id, e.email, e.hashed_password, e.created_at 
+const sqlSelectEmailCredentialsByEmail = `
+select e.user_id, e.email, e.hashed_password, e.created_at 
 from email_credentials e
 where e.email = $1;`
 

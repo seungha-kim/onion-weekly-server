@@ -27,7 +27,9 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Static("/", "./public")
 	e.GET("/hello", web.HelloHandler).Name = "get-hello"
-	e.GET("/firstUser", web.GetFirstUserHandler).Name = "first-user"
 	e.POST("/createTestUser", web.PostTestUserHandler).Name = "create-test-user"
+	e.POST("/createTestToken", web.PostTestTokenHandler).Name = "create-test-token"
+	// FIXME
+	e.Debug = true
 	e.Logger.Fatal(e.Start(":1323"))
 }

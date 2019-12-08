@@ -3,26 +3,41 @@ package web
 import (
 	"github.com/labstack/echo"
 	"github.com/onion-studio/onion-weekly/domain"
+	"net/http"
 )
 
-// GetFirstUserHandler haha
-func GetFirstUserHandler(c echo.Context) error {
-	user, err := domain.LoadFirstUser()
-	if err != nil {
-		return c.JSON(500, nil)
+func PostTestUserHandler(c echo.Context) (err error) {
+	input := domain.InputCreateUser{}
+	if err = c.Bind(&input); err != nil {
+		return // TODO
 	}
-
+	user, _, _, err := domain.CreateUserWithEmailCredential(input)
+	if err != nil {
+		switch err.(type) {
+		case domain.DuplicateError:
+			err = echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		return
+	}
 	return c.JSON(200, user)
 }
 
-func PostTestUserHandler(c echo.Context) error {
-	input := domain.CreateUserWithEmailCredentialInput{
-		Email:    "hello@example.com",
-		Password: "asdf11234",
+func PostTestTokenHandler(c echo.Context) (err error) {
+	input := domain.InputCreatTokenByEmailCredential{}
+	if err = c.Bind(&input); err != nil {
+		return // TODO
 	}
-	_, cred, err := domain.CreateUserWithEmailCredential(input)
+	outputToken, err := domain.CreateTokenByEmailCredential(input)
 	if err != nil {
-		return err
+		switch err.(type) {
+
+		}
+		return
 	}
-	return c.JSON(200, cred)
+	switch err.(type) {
+	case domain.DuplicateError:
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(200, outputToken)
 }

@@ -3,7 +3,7 @@ module github.com/onion-studio/onion-weekly
 go 1.13
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang-migrate/migrate v3.5.4+incompatible // indirect
 	github.com/golang-migrate/migrate/v4 v4.7.0 // indirect
 	github.com/jackc/pgtype v1.0.2

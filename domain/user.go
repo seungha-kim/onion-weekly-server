@@ -2,38 +2,34 @@ package domain
 
 import (
 	"context"
-	"fmt"
-	"os"
-
+	"github.com/dgrijalva/jwt-go"
 	"github.com/onion-studio/onion-weekly/db"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
-// User represents a record from users table
-type User struct {
-	Id        UUID        `json:"id"`
-	CreatedAt Timestamptz `json:"createdAt"`
-}
+// language=PostgreSQL
+const sqlInsertUsers = `insert into users (id)
+values (default) 
+returning id, created_at;`
 
-type UserProfile struct {
-	UserId   UUID   `json:"userId"`
-	FullName string `json:"fullName"`
-}
+// language=PostgreSQL
+const sqlInsertEmailCredentials = `insert into email_credentials (user_id, email, hashed_password) 
+values ($1, $2, $3) 
+returning user_id, email, hashed_password, created_at;`
 
-type EmailCredential struct {
-	UserId         UUID        `json:"userId"`
-	Email          string      `json:"email"`
-	HashedPassword string      `json:"-"`
-	CreatedAt      Timestamptz `json:"createdAt"`
-}
+// language=PostgreSQL
+const sqlInsertUserProfiles = `insert into user_profiles (user_id, full_name)
+values ($1, $2)
+returning user_id, full_name;`
 
-type CreateUserWithEmailCredentialInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
+// language=PostgreSQL
+const sqlSelectEmailCredentialsByEmail = `select e.user_id, e.email, e.hashed_password, e.created_at 
+from email_credentials e
+where e.email = $1;`
 
 // CreateUserWithEmailCredential creates user with email credential, and returns them.
-func CreateUserWithEmailCredential(input CreateUserWithEmailCredentialInput) (user User, credential EmailCredential, err error) {
+func CreateUserWithEmailCredential(input InputCreateUser) (user User, credential EmailCredential, profile UserProfile, err error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), 14)
 	if err != nil {
 		return
@@ -47,9 +43,7 @@ func CreateUserWithEmailCredential(input CreateUserWithEmailCredentialInput) (us
 	err = tx.
 		QueryRow(
 			context.Background(),
-			`insert into users (id) 
-			values (default) 
-			returning id, created_at;`,
+			sqlInsertUsers,
 		).
 		Scan(&user.Id, &user.CreatedAt)
 
@@ -61,11 +55,26 @@ func CreateUserWithEmailCredential(input CreateUserWithEmailCredentialInput) (us
 	err = tx.
 		QueryRow(
 			context.Background(),
-			`insert into email_credentials (user_id, email, hashed_password) 
-			values ($1, $2, $3) 
-			returning user_id, email, hashed_password, created_at;`,
+			sqlInsertEmailCredentials,
 			user.Id, input.Email, hashed).
 		Scan(&credential.UserId, &credential.Email, &credential.HashedPassword, &credential.CreatedAt)
+
+	if err != nil {
+		_ = tx.Rollback(context.Background())
+
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"email_credentials_email_key\"") {
+			err = DuplicateError{fieldName: "email"}
+		}
+
+		return
+	}
+
+	err = tx.
+		QueryRow(
+			context.Background(),
+			sqlInsertUserProfiles,
+			user.Id, input.FullName).
+		Scan(&profile.UserId, &profile.FullName)
 
 	if err != nil {
 		_ = tx.Rollback(context.Background())
@@ -77,12 +86,29 @@ func CreateUserWithEmailCredential(input CreateUserWithEmailCredentialInput) (us
 	return
 }
 
-// LoadFirstUser load the first user (for testing)
-func LoadFirstUser() (user User, err error) {
-	err = db.Pool.QueryRow(context.Background(), "select id from users").Scan(&user.Id)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
+func CreateTokenByEmailCredential(input InputCreatTokenByEmailCredential) (output OutputToken, err error) {
+	ec := EmailCredential{}
+
+	err = db.Pool.QueryRow(
+		context.Background(),
+		sqlSelectEmailCredentialsByEmail,
+		input.Email).Scan(&ec.UserId, &ec.Email, &ec.HashedPassword, &ec.CreatedAt)
+
+	if err = bcrypt.CompareHashAndPassword([]byte(ec.HashedPassword), []byte(input.Password)); err != nil {
+		return
 	}
+	var buf []byte
+	buf, err = ec.UserId.EncodeText(nil, buf)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"uid": string(buf),
+	})
+
+	tokenString, err := token.SignedString([]byte("mysecret")) // FIXME
+
+	if err != nil {
+		return
+	}
+	output.Token = tokenString
 	return
 }

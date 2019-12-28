@@ -2,10 +2,13 @@ package domain
 
 import (
 	"context"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/onion-studio/onion-weekly/db"
-	"golang.org/x/crypto/bcrypt"
 	"strings"
+
+	"github.com/onion-studio/onion-weekly/config"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/jackc/pgx/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // language=PostgreSQL
@@ -33,13 +36,13 @@ from email_credentials e
 where e.email = $1;`
 
 // CreateUserWithEmailCredential creates user with email credential, and returns them.
-func CreateUserWithEmailCredential(input InputCreateUser) (user User, credential EmailCredential, profile UserProfile, err error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), 14)
-	if err != nil {
-		return
-	}
+func CreateUserWithEmailCredential(
+	appConf config.AppConf,
+	tx pgx.Tx,
+	input InputCreateUser,
+) (user User, credential EmailCredential, profile UserProfile, err error) {
 
-	tx, err := db.Pool.Begin(context.Background())
+	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), appConf.BcryptCost)
 	if err != nil {
 		return
 	}
@@ -80,20 +83,17 @@ func CreateUserWithEmailCredential(input InputCreateUser) (user User, credential
 			user.Id, input.FullName).
 		Scan(&profile.UserId, &profile.FullName)
 
-	if err != nil {
-		_ = tx.Rollback(context.Background())
-		return
-	}
-
-	err = tx.Commit(context.Background())
-
 	return
 }
 
-func CreateTokenByEmailCredential(input InputCreatTokenByEmailCredential) (output OutputToken, err error) {
+func CreateTokenByEmailCredential(
+	appConf config.AppConf,
+	tx pgx.Tx,
+	input InputCreatTokenByEmailCredential,
+) (output OutputToken, err error) {
 	ec := EmailCredential{}
 
-	err = db.Pool.QueryRow(
+	err = tx.QueryRow(
 		context.Background(),
 		sqlSelectEmailCredentialsByEmail,
 		input.Email).Scan(&ec.UserId, &ec.Email, &ec.HashedPassword, &ec.CreatedAt)

@@ -1,34 +1,26 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
+	"fmt"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/onion-studio/onion-weekly/db"
+	"github.com/onion-studio/onion-weekly/config"
 	"github.com/onion-studio/onion-weekly/web"
-	"log"
+	m "github.com/onion-studio/onion-weekly/web/middleware"
 )
 
-// Config represent app-wide configuration
-type Config struct {
-	pgURL string
-}
-
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Cannot load .env")
-	}
-
-	db.Initialize()
-
+	appConf := config.LoadAppConf()
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(m.AppConf(appConf))
+	e.Use(m.PgxPool(appConf.PgURL))
 	e.Static("/", "./public")
 	web.RegisterAuthHandlers(e.Group("/auth"))
 	web.RegisterHelloHandlers(e.Group("/hello"))
 	// FIXME
-	e.Debug = true
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Debug = appConf.Debug
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", appConf.Port)))
 }

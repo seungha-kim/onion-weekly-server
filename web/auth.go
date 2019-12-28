@@ -1,14 +1,19 @@
 package web
 
 import (
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
+	"github.com/jackc/pgx/v4"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/onion-studio/onion-weekly/config"
 	"github.com/onion-studio/onion-weekly/domain"
-	"net/http"
+	m "github.com/onion-studio/onion-weekly/web/middleware"
 )
 
 func RegisterAuthHandlers(g *echo.Group) {
+	g.Use(m.Transaction)
 	g.POST("/register", handlePostTestUser)
 	g.POST("/session", handlePostTestToken)
 	// TODO: JWTWithConfig
@@ -16,11 +21,15 @@ func RegisterAuthHandlers(g *echo.Group) {
 }
 
 func handlePostTestUser(c echo.Context) (err error) {
+	appConf := c.Get("appConf").(config.AppConf)
+	tx := c.Get("tx").(pgx.Tx)
+
 	input := domain.InputCreateUser{}
 	if err = c.Bind(&input); err != nil {
 		return // TODO
 	}
-	user, _, _, err := domain.CreateUserWithEmailCredential(input)
+
+	user, _, _, err := domain.CreateUserWithEmailCredential(appConf, tx, input)
 	if err != nil {
 		switch err.(type) {
 		case domain.DuplicateError:
@@ -32,22 +41,21 @@ func handlePostTestUser(c echo.Context) (err error) {
 }
 
 func handlePostTestToken(c echo.Context) (err error) {
+	appConf := c.Get("appConf").(config.AppConf)
+	tx := c.Get("tx").(pgx.Tx)
+
 	input := domain.InputCreatTokenByEmailCredential{}
 	if err = c.Bind(&input); err != nil {
 		return // TODO
 	}
-	outputToken, err := domain.CreateTokenByEmailCredential(input)
+
+	outputToken, err := domain.CreateTokenByEmailCredential(appConf, tx, input)
 	if err != nil {
 		switch err.(type) {
 
 		}
 		return
 	}
-	switch err.(type) {
-	case domain.DuplicateError:
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
 	return c.JSON(200, outputToken)
 }
 

@@ -6,3 +6,6 @@ migrate-up:
 
 migrate-down:
 	migrate -path ./migrations -database "postgresql://postgres@localhost/onion_weekly?sslmode=disable" down $(step)
+
+test:
+	go test ./...

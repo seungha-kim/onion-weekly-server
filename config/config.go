@@ -72,6 +72,6 @@ func LoadAppConf() AppConf {
 
 func LoadTestAppConf() AppConf {
 	wd, _ := os.Getwd()
-	_ = godotenv.Load(path.Join(wd, "test.env"))
+	_ = godotenv.Load(path.Join(wd, "..", "test.env"))
 	return loadAppConf()
 }

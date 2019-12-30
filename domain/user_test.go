@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/jackc/pgx/v4"
@@ -49,8 +50,9 @@ func TestCreateUserWithEmailCredential(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		fmt.Println("what the")
 		t.Run(tt.name, func(t *testing.T) {
-			RunInTransaction(pgxPool, func(tx pgx.Tx) {
+			db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
 				_, gotCredential, gotProfile, err := CreateUserWithEmailCredential(appConf, tx, tt.input)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("CreateUserWithEmailCredential() error = %v, wantErr %v", err, tt.wantErr)
@@ -96,7 +98,7 @@ func TestCreateTokenByEmailCredential(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			RunInTransaction(pgxPool, func(tx pgx.Tx) {
+			db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
 				_, _, _, err := CreateUserWithEmailCredential(
 					appConf,
 					tx,

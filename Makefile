@@ -1,11 +1,9 @@
-main:
-	go build -o build/onion-weekly onion-weekly.go
+.PHONY: migrate-up migrate-down
+
+include $(ENV).env
 
 migrate-up:
-	migrate -path ./migrations -database "postgresql://postgres@localhost/onion_weekly?sslmode=disable" up $(step)
+	migrate -path ./migrations -database $(PG_URL) up $(step)
 
 migrate-down:
-	migrate -path ./migrations -database "postgresql://postgres@localhost/onion_weekly?sslmode=disable" down $(step)
-
-test:
-	go test ./...
+	migrate -path ./migrations -database $(PG_URL) down $(step)

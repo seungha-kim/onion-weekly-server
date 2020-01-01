@@ -12,5 +12,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0
+	github.com/stretchr/testify v1.4.0
+	go.uber.org/fx v1.10.0
 	golang.org/x/crypto v0.0.0-20191128160524-b544559bb6d1
 )

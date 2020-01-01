@@ -10,14 +10,20 @@ type Hello struct {
 	World string `json:"world"`
 }
 
-func RegisterHelloHandlers(g *echo.Group) {
-	g.GET("/", handleHello)
+type helloHandler struct{}
+
+func NewHelloHandler() *helloHandler {
+	return &helloHandler{}
 }
 
-func handleHello(c echo.Context) error {
-	h := &Hello{
+func (h *helloHandler) Register(g *echo.Group) {
+	g.GET("", h.handleHello)
+}
+
+func (h *helloHandler) handleHello(c echo.Context) error {
+	hello := &Hello{
 		Hello: "Go Programming",
 		World: "Fun!",
 	}
-	return c.JSON(200, h)
+	return c.JSON(200, hello)
 }

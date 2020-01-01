@@ -11,6 +11,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserService struct {
+	appConf config.AppConf
+}
+
+func NewUserService(appConf config.AppConf) *UserService {
+	return &UserService{appConf: appConf}
+}
+
 // language=PostgreSQL
 const sqlInsertUsers = `
 insert into users (id)
@@ -36,13 +44,12 @@ from email_credentials e
 where e.email = $1;`
 
 // CreateUserWithEmailCredential creates user with email credential, and returns them.
-func CreateUserWithEmailCredential(
-	appConf config.AppConf,
+func (srv *UserService) CreateUserWithEmailCredential(
 	tx pgx.Tx,
 	input InputCreateUser,
 ) (user User, credential EmailCredential, profile UserProfile, err error) {
 
-	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), appConf.BcryptCost)
+	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), srv.appConf.BcryptCost)
 	if err != nil {
 		return
 	}
@@ -86,8 +93,7 @@ func CreateUserWithEmailCredential(
 	return
 }
 
-func CreateTokenByEmailCredential(
-	appConf config.AppConf,
+func (srv *UserService) CreateTokenByEmailCredential(
 	tx pgx.Tx,
 	input InputCreatTokenByEmailCredential,
 ) (output OutputToken, err error) {

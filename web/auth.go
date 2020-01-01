@@ -3,33 +3,54 @@ package web
 import (
 	"net/http"
 
+	"github.com/onion-studio/onion-weekly/config"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jackc/pgx/v4"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/onion-studio/onion-weekly/config"
+	em "github.com/labstack/echo/middleware"
 	"github.com/onion-studio/onion-weekly/domain"
-	m "github.com/onion-studio/onion-weekly/web/middleware"
+	"github.com/onion-studio/onion-weekly/web/middleware"
 )
 
-func RegisterAuthHandlers(g *echo.Group) {
-	g.Use(m.Transaction)
-	g.POST("/register", handlePostTestUser)
-	g.POST("/session", handlePostTestToken)
-	// TODO: JWTWithConfig
-	g.GET("/token", handleGetTokenPayload, middleware.JWT([]byte("mysecret")))
+type authHandler struct {
+	appConf     config.AppConf
+	pgxPool     *pgxpool.Pool
+	userService *domain.UserService
 }
 
-func handlePostTestUser(c echo.Context) (err error) {
-	appConf := c.Get("appConf").(config.AppConf)
+func NewAuthHandler(
+	appConf config.AppConf,
+	pgxPool *pgxpool.Pool,
+	userService *domain.UserService,
+) *authHandler {
+	return &authHandler{
+		appConf:     appConf,
+		pgxPool:     pgxPool,
+		userService: userService,
+	}
+}
+
+func (h *authHandler) Register(g *echo.Group) {
+	g.Use(middleware.Transaction(h.appConf, h.pgxPool))
+	g.POST("/register", h.handlePostUser)
+	g.POST("/session", h.handlePostTestToken)
+	// TODO: JWTWithConfig
+	g.GET("/token", h.handleGetTokenPayload, em.JWT([]byte("mysecret")))
+}
+
+func (h *authHandler) handlePostUser(c echo.Context) (err error) {
 	tx := c.Get("tx").(pgx.Tx)
 
+	// TODO: recaptcha
 	input := domain.InputCreateUser{}
 	if err = c.Bind(&input); err != nil {
 		return // TODO
 	}
 
-	user, _, _, err := domain.CreateUserWithEmailCredential(appConf, tx, input)
+	user, _, _, err := h.userService.CreateUserWithEmailCredential(tx, input)
 	if err != nil {
 		switch err.(type) {
 		case domain.DuplicateError:
@@ -40,8 +61,7 @@ func handlePostTestUser(c echo.Context) (err error) {
 	return c.JSON(200, user)
 }
 
-func handlePostTestToken(c echo.Context) (err error) {
-	appConf := c.Get("appConf").(config.AppConf)
+func (h *authHandler) handlePostTestToken(c echo.Context) (err error) {
 	tx := c.Get("tx").(pgx.Tx)
 
 	input := domain.InputCreatTokenByEmailCredential{}
@@ -49,7 +69,7 @@ func handlePostTestToken(c echo.Context) (err error) {
 		return // TODO
 	}
 
-	outputToken, err := domain.CreateTokenByEmailCredential(appConf, tx, input)
+	outputToken, err := h.userService.CreateTokenByEmailCredential(tx, input)
 	if err != nil {
 		switch err.(type) {
 
@@ -59,7 +79,7 @@ func handlePostTestToken(c echo.Context) (err error) {
 	return c.JSON(200, outputToken)
 }
 
-func handleGetTokenPayload(c echo.Context) (err error) {
+func (h *authHandler) handleGetTokenPayload(c echo.Context) (err error) {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	return c.JSON(200, claims)

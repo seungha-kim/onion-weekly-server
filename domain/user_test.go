@@ -17,13 +17,15 @@ var pgxPool *pgxpool.Pool
 var appConf config.AppConf
 
 func TestMain(m *testing.M) {
-	appConf = config.LoadTestAppConf()
-	pgxPool = db.CreatePool(appConf.PgURL)
+	appConf = config.NewTestAppConf()
+	pgxPool = db.NewPgxPool(appConf)
 	m.Run()
 	pgxPool.Close()
 }
 
 func TestCreateUserWithEmailCredential(t *testing.T) {
+	srv := UserService{appConf: appConf}
+
 	tests := []struct {
 		name           string
 		input          InputCreateUser
@@ -53,7 +55,7 @@ func TestCreateUserWithEmailCredential(t *testing.T) {
 		fmt.Println("what the")
 		t.Run(tt.name, func(t *testing.T) {
 			db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
-				_, gotCredential, gotProfile, err := CreateUserWithEmailCredential(appConf, tx, tt.input)
+				_, gotCredential, gotProfile, err := srv.CreateUserWithEmailCredential(tx, tt.input)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("CreateUserWithEmailCredential() error = %v, wantErr %v", err, tt.wantErr)
 				}
@@ -72,6 +74,8 @@ func TestCreateUserWithEmailCredential(t *testing.T) {
 }
 
 func TestCreateTokenByEmailCredential(t *testing.T) {
+	srv := UserService{appConf: appConf}
+
 	tests := []struct {
 		name       string
 		input      InputCreatTokenByEmailCredential
@@ -99,16 +103,14 @@ func TestCreateTokenByEmailCredential(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
-				_, _, _, err := CreateUserWithEmailCredential(
-					appConf,
+				_, _, _, err := srv.CreateUserWithEmailCredential(
 					tx,
 					InputCreateUser{
 						Email:    "test@test.com",
 						Password: "test1234",
 						FullName: "Test Test",
 					})
-				_, err = CreateTokenByEmailCredential(
-					appConf,
+				_, err = srv.CreateTokenByEmailCredential(
 					tx,
 					tt.input)
 				if (err != nil) != tt.wantErr {

@@ -10,10 +10,24 @@ import (
 )
 
 type AppConf struct {
+	Test       bool
+	Secret     string
 	Debug      bool
 	BcryptCost int
 	PgURL      string
 	Port       int64
+}
+
+func NewAppConf() AppConf {
+	wd, _ := os.Getwd()
+	_ = godotenv.Load(path.Join(wd, "main.env"))
+	return loadAppConf(false)
+}
+
+func NewTestAppConf() AppConf {
+	wd, _ := os.Getwd()
+	_ = godotenv.Load(path.Join(wd, "..", "test.env"))
+	return loadAppConf(true)
 }
 
 func loadEnvs() map[string]string {
@@ -28,8 +42,10 @@ func loadEnvs() map[string]string {
 		"DEBUG":       "",
 		"PG_URL":      "",
 		"BCRYPT_COST": "",
+		"SECRET":      "",
 	}
 
+	// check existence
 	for k := range envs {
 		fromEnv := os.Getenv(k)
 		defaultValue, ok := defaults[k]
@@ -46,7 +62,7 @@ func loadEnvs() map[string]string {
 	return envs
 }
 
-func loadAppConf() AppConf {
+func loadAppConf(test bool) AppConf {
 	envs := loadEnvs()
 
 	port, err := strconv.ParseInt(envs["PORT"], 10, 64)
@@ -57,21 +73,11 @@ func loadAppConf() AppConf {
 	bcryptCost, err := strconv.ParseInt(envs["BCRYPT_COST"], 10, 64)
 
 	return AppConf{
+		Test:       test,
 		BcryptCost: int(bcryptCost),
 		PgURL:      envs["PG_URL"],
 		Debug:      envs["DEBUG"] != "",
 		Port:       port,
+		Secret:     envs["SECRET"],
 	}
-}
-
-func LoadAppConf() AppConf {
-	wd, _ := os.Getwd()
-	_ = godotenv.Load(path.Join(wd, "main.env"))
-	return loadAppConf()
-}
-
-func LoadTestAppConf() AppConf {
-	wd, _ := os.Getwd()
-	_ = godotenv.Load(path.Join(wd, "..", "test.env"))
-	return loadAppConf()
 }

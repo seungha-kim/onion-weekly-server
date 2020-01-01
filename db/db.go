@@ -4,13 +4,15 @@ import (
 	"context"
 	"log"
 
+	"github.com/onion-studio/onion-weekly/config"
+
 	"github.com/jackc/pgx/v4"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-func CreatePool(pgUrl string) *pgxpool.Pool {
-	poolConfig, err := pgxpool.ParseConfig(pgUrl)
+func NewPgxPool(appConf config.AppConf) *pgxpool.Pool {
+	poolConfig, err := pgxpool.ParseConfig(appConf.PgURL)
 	if err != nil {
 		log.Fatal("Unable to parse DATABASE_URL", "error", err)
 	}

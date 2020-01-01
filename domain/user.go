@@ -37,12 +37,6 @@ insert into user_profiles (user_id, full_name)
 values ($1, $2)
 returning user_id, full_name;`
 
-// language=PostgreSQL
-const sqlSelectEmailCredentialsByEmail = `
-select e.user_id, e.email, e.hashed_password, e.created_at 
-from email_credentials e
-where e.email = $1;`
-
 // CreateUserWithEmailCredential creates user with email credential, and returns them.
 func (srv *UserService) CreateUserWithEmailCredential(
 	tx pgx.Tx,
@@ -92,6 +86,12 @@ func (srv *UserService) CreateUserWithEmailCredential(
 
 	return
 }
+
+// language=PostgreSQL
+const sqlSelectEmailCredentialsByEmail = `
+select e.user_id, e.email, e.hashed_password, e.created_at 
+from email_credentials e
+where e.email = $1;`
 
 func (srv *UserService) CreateTokenByEmailCredential(
 	tx pgx.Tx,

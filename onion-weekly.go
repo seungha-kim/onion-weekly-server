@@ -9,9 +9,10 @@ import (
 )
 
 func main() {
-	app := fx.New(
+	appConf := config.NewAppConf()
+	opts := []fx.Option{
 		fx.Provide(
-			config.NewAppConf,
+			func() config.AppConf { return appConf },
 			db.NewPgxPool,
 			web.NewServer,
 			web.NewAuthHandler,
@@ -19,6 +20,10 @@ func main() {
 			domain.NewUserService,
 		),
 		fx.Invoke(func(_ *web.Server) {}),
-	)
+	}
+	if !appConf.Debug {
+		opts = append(opts, fx.NopLogger)
+	}
+	app := fx.New(opts...)
 	app.Run()
 }

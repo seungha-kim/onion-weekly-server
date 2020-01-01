@@ -35,8 +35,8 @@ func NewAuthHandler(
 
 func (h *authHandler) Register(g *echo.Group) {
 	g.Use(middleware.Transaction(h.appConf, h.pgxPool))
+	g.POST("", h.handleAuth)
 	g.POST("/register", h.handlePostUser)
-	g.POST("/session", h.handlePostTestToken)
 	// TODO: JWTWithConfig
 	g.GET("/token", h.handleGetTokenPayload, em.JWT([]byte("mysecret")))
 }
@@ -61,7 +61,7 @@ func (h *authHandler) handlePostUser(c echo.Context) (err error) {
 	return c.JSON(200, user)
 }
 
-func (h *authHandler) handlePostTestToken(c echo.Context) (err error) {
+func (h *authHandler) handleAuth(c echo.Context) (err error) {
 	tx := c.Get("tx").(pgx.Tx)
 
 	input := domain.InputCreatTokenByEmailCredential{}
@@ -69,14 +69,11 @@ func (h *authHandler) handlePostTestToken(c echo.Context) (err error) {
 		return // TODO
 	}
 
-	outputToken, err := h.userService.CreateTokenByEmailCredential(tx, input)
+	output, err := h.userService.CreateTokenByEmailCredential(tx, input)
 	if err != nil {
-		switch err.(type) {
-
-		}
 		return
 	}
-	return c.JSON(200, outputToken)
+	return c.JSON(200, output)
 }
 
 func (h *authHandler) handleGetTokenPayload(c echo.Context) (err error) {

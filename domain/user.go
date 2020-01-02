@@ -114,7 +114,7 @@ func (srv *UserService) CreateTokenByEmailCredential(
 		"uid": string(buf),
 	})
 
-	tokenString, err := token.SignedString([]byte("mysecret")) // FIXME
+	tokenString, err := token.SignedString(srv.appConf.Secret)
 
 	if err != nil {
 		return

@@ -17,7 +17,7 @@ var pgxPool *pgxpool.Pool
 var appConf config.AppConf
 
 func TestMain(m *testing.M) {
-	appConf = config.NewTestAppConf()
+	appConf, _ = config.NewTestAppConf()
 	pgxPool = db.NewPgxPool(appConf)
 	m.Run()
 	pgxPool.Close()

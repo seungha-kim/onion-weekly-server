@@ -11,7 +11,7 @@ import (
 
 type AppConf struct {
 	Test       bool
-	Secret     string
+	Secret     []byte
 	Debug      bool
 	BcryptCost int
 	PgURL      string
@@ -86,6 +86,6 @@ func loadAppConf(test bool) (AppConf, error) {
 		PgURL:      envs["PG_URL"],
 		Debug:      envs["DEBUG"] != "",
 		Port:       port,
-		Secret:     envs["SECRET"],
+		Secret:     []byte(envs["SECRET"]),
 	}, nil
 }

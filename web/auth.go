@@ -36,9 +36,8 @@ func NewAuthHandler(
 func (h *authHandler) Register(g *echo.Group) {
 	g.Use(middleware.Transaction(h.appConf, h.pgxPool))
 	g.POST("", h.handleAuth)
-	g.POST("/register", h.handlePostUser)
-	// TODO: JWTWithConfig
-	g.GET("/token", h.handleGetTokenPayload, em.JWT([]byte("mysecret")))
+	//g.POST("/register", h.handlePostUser)
+	g.GET("/me", h.handleGetTokenPayload, em.JWT(h.appConf.Secret))
 }
 
 func (h *authHandler) handlePostUser(c echo.Context) (err error) {

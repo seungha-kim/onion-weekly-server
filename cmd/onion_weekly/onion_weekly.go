@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/onion-studio/onion-weekly/config"
 	"github.com/onion-studio/onion-weekly/db"
 	"github.com/onion-studio/onion-weekly/domain"
@@ -9,10 +11,9 @@ import (
 )
 
 func main() {
-	appConf := config.NewAppConf()
 	opts := []fx.Option{
 		fx.Provide(
-			func() config.AppConf { return appConf },
+			config.NewAppConf,
 			db.NewPgxPool,
 			web.NewServer,
 			web.NewAuthHandler,
@@ -21,7 +22,7 @@ func main() {
 		),
 		fx.Invoke(func(_ *web.Server) {}),
 	}
-	if !appConf.Debug {
+	if os.Getenv("DEBUG") != "" {
 		opts = append(opts, fx.NopLogger)
 	}
 	app := fx.New(opts...)

@@ -1,9 +1,6 @@
-.PHONY: migrate-up migrate-down all
+.PHONY: migrate-up migrate-down
 
-include main.env
-
-all: clean
-	go build -o build ./...
+include test.env
 
 migrate-up:
 	migrate -path ./migrations -database $(PG_URL) up $(step)
@@ -11,5 +8,3 @@ migrate-up:
 migrate-down:
 	migrate -path ./migrations -database $(PG_URL) down $(step)
 
-clean:
-	rm -f ./build/*

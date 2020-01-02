@@ -18,19 +18,27 @@ type AppConf struct {
 	Port       int64
 }
 
-func NewAppConf() AppConf {
+type Error struct {
+	message string
+}
+
+func (c Error) Error() string {
+	return c.message
+}
+
+func NewAppConf() (AppConf, error) {
 	wd, _ := os.Getwd()
 	_ = godotenv.Load(path.Join(wd, "main.env"))
 	return loadAppConf(false)
 }
 
-func NewTestAppConf() AppConf {
+func NewTestAppConf() (AppConf, error) {
 	wd, _ := os.Getwd()
 	_ = godotenv.Load(path.Join(wd, "..", "test.env"))
 	return loadAppConf(true)
 }
 
-func loadEnvs() map[string]string {
+func loadEnvs() (map[string]string, error) {
 	defaults := map[string]string{
 		"PORT":        "1323",
 		"DEBUG":       "",
@@ -50,7 +58,7 @@ func loadEnvs() map[string]string {
 		fromEnv := os.Getenv(k)
 		defaultValue, ok := defaults[k]
 		if !ok && fromEnv == "" {
-			panic(fmt.Sprintf("Cannot get %s", k))
+			return nil, Error{message: fmt.Sprintf("Cannot get %s", k)}
 		}
 		if fromEnv != "" {
 			envs[k] = fromEnv
@@ -59,15 +67,15 @@ func loadEnvs() map[string]string {
 		}
 	}
 
-	return envs
+	return envs, nil
 }
 
-func loadAppConf(test bool) AppConf {
-	envs := loadEnvs()
+func loadAppConf(test bool) (AppConf, error) {
+	envs, err := loadEnvs()
 
 	port, err := strconv.ParseInt(envs["PORT"], 10, 64)
 	if err != nil {
-		panic(err)
+		return AppConf{}, err
 	}
 
 	bcryptCost, err := strconv.ParseInt(envs["BCRYPT_COST"], 10, 64)
@@ -79,5 +87,5 @@ func loadAppConf(test bool) AppConf {
 		Debug:      envs["DEBUG"] != "",
 		Port:       port,
 		Secret:     envs["SECRET"],
-	}
+	}, nil
 }

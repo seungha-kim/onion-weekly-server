@@ -9,7 +9,10 @@ import (
 )
 
 func main() {
-	appConf := config.NewAppConf()
+	appConf, err := config.NewAppConf()
+	if err != nil {
+		panic(err)
+	}
 	input := os.Args[1]
 	hashed, err := bcrypt.GenerateFromPassword([]byte(input), appConf.BcryptCost)
 	if err != nil {

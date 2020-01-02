@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -15,20 +16,6 @@ import (
 )
 
 func main() {
-	var email, fullName string
-	fmt.Println("Enter the email of new user:")
-	if _, err := fmt.Scanln(&email); err != nil {
-		panic(err)
-	}
-	fmt.Println("Enter the password of new user:")
-	password, err := terminal.ReadPassword(0)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Enter the full name of new user:")
-	if _, err := fmt.Scanln(&fullName); err != nil {
-		panic(err)
-	}
 	app := fx.New(
 		fx.Provide(
 			config.NewAppConf,
@@ -36,10 +23,25 @@ func main() {
 			domain.NewUserService,
 		),
 		fx.Invoke(func(pgxPool *pgxpool.Pool, userService *domain.UserService) {
+			var email, fullName string
+			fmt.Println("Enter the email of new user:")
+			if _, err := fmt.Scanln(&email); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("Enter the password of new user:")
+			password, err := terminal.ReadPassword(0)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("Enter the full name of new user:")
+			if _, err := fmt.Scanln(&fullName); err != nil {
+				log.Fatal(err)
+			}
+
 			ctx := context.Background()
 			tx, err := pgxPool.Begin(ctx)
 			if err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 			_, _, _, err = userService.CreateUserWithEmailCredential(tx, domain.InputCreateUser{
 				Email:    email,
@@ -47,15 +49,14 @@ func main() {
 				FullName: fullName,
 			})
 			if err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 			if err := tx.Commit(ctx); err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 			fmt.Println("Successfully created.")
 			os.Exit(0)
 		}),
-		fx.NopLogger,
 	)
 
 	app.Run()

@@ -3,6 +3,8 @@ package web
 import (
 	"net/http"
 
+	"github.com/onion-studio/onion-weekly/dto"
+
 	"github.com/onion-studio/onion-weekly/config"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -44,7 +46,7 @@ func (h *authHandler) handlePostUser(c echo.Context) (err error) {
 	tx := c.Get("tx").(pgx.Tx)
 
 	// TODO: recaptcha
-	input := domain.InputCreateUser{}
+	input := dto.CreateUserInput{}
 	if err = c.Bind(&input); err != nil {
 		return // TODO
 	}
@@ -63,7 +65,7 @@ func (h *authHandler) handlePostUser(c echo.Context) (err error) {
 func (h *authHandler) handleAuth(c echo.Context) (err error) {
 	tx := c.Get("tx").(pgx.Tx)
 
-	input := domain.InputCreatTokenByEmailCredential{}
+	input := dto.CreatTokenByEmailCredentialInput{}
 	if err = c.Bind(&input); err != nil {
 		return // TODO
 	}

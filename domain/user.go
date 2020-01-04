@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/onion-studio/onion-weekly/dto"
+
 	"github.com/onion-studio/onion-weekly/config"
 
 	"github.com/dgrijalva/jwt-go"
@@ -40,8 +42,9 @@ returning user_id, full_name;`
 // CreateUserWithEmailCredential creates user with email credential, and returns them.
 func (srv *UserService) CreateUserWithEmailCredential(
 	tx pgx.Tx,
-	input InputCreateUser,
-) (user User, credential EmailCredential, profile UserProfile, err error) {
+	input dto.CreateUserInput,
+) (user dto.User, credential dto.EmailCredential, profile dto.UserProfile, err error) {
+	ctx := context.Background()
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), srv.appConf.BcryptCost)
 	if err != nil {
@@ -49,10 +52,7 @@ func (srv *UserService) CreateUserWithEmailCredential(
 	}
 
 	err = tx.
-		QueryRow(
-			context.Background(),
-			sqlInsertUsers,
-		).
+		QueryRow(ctx, sqlInsertUsers).
 		Scan(&user.Id, &user.CreatedAt)
 
 	if err != nil {
@@ -61,10 +61,7 @@ func (srv *UserService) CreateUserWithEmailCredential(
 	}
 
 	err = tx.
-		QueryRow(
-			context.Background(),
-			sqlInsertEmailCredentials,
-			user.Id, input.Email, hashed).
+		QueryRow(ctx, sqlInsertEmailCredentials, user.Id, input.Email, hashed).
 		Scan(&credential.UserId, &credential.Email, &credential.HashedPassword, &credential.CreatedAt)
 
 	if err != nil {
@@ -78,10 +75,7 @@ func (srv *UserService) CreateUserWithEmailCredential(
 	}
 
 	err = tx.
-		QueryRow(
-			context.Background(),
-			sqlInsertUserProfiles,
-			user.Id, input.FullName).
+		QueryRow(ctx, sqlInsertUserProfiles, user.Id, input.FullName).
 		Scan(&profile.UserId, &profile.FullName)
 
 	return
@@ -95,14 +89,14 @@ where e.email = $1;`
 
 func (srv *UserService) CreateTokenByEmailCredential(
 	tx pgx.Tx,
-	input InputCreatTokenByEmailCredential,
-) (output OutputToken, err error) {
-	ec := EmailCredential{}
+	input dto.CreatTokenByEmailCredentialInput,
+) (output dto.Token, err error) {
+	ctx := context.Background()
+	ec := dto.EmailCredential{}
 
-	err = tx.QueryRow(
-		context.Background(),
-		sqlSelectEmailCredentialsByEmail,
-		input.Email).Scan(&ec.UserId, &ec.Email, &ec.HashedPassword, &ec.CreatedAt)
+	err = tx.
+		QueryRow(ctx, sqlSelectEmailCredentialsByEmail, input.Email).
+		Scan(&ec.UserId, &ec.Email, &ec.HashedPassword, &ec.CreatedAt)
 
 	if err = bcrypt.CompareHashAndPassword([]byte(ec.HashedPassword), []byte(input.Password)); err != nil {
 		return

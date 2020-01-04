@@ -8,3 +8,6 @@ migrate-up:
 migrate-down:
 	migrate -path ./migrations -database $(PG_URL) down $(step)
 
+# https://github.com/go-testfixtures/testfixtures#parallel-testing
+test-all:
+	go test -p 1 ./...

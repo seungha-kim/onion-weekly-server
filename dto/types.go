@@ -1,8 +1,9 @@
-package domain
+package dto
 
 import (
-	"github.com/jackc/pgtype"
 	"time"
+
+	"github.com/jackc/pgtype"
 )
 
 func wrapDoubleQuotes(s string) string {

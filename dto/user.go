@@ -1,6 +1,5 @@
-package domain
+package dto
 
-// User represents a record from users table
 type User struct {
 	Id        UUID        `json:"id"`
 	CreatedAt Timestamptz `json:"createdAt"`
@@ -18,17 +17,17 @@ type EmailCredential struct {
 	CreatedAt      Timestamptz `json:"createdAt"`
 }
 
-type InputCreateUser struct {
+type CreateUserInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	FullName string `json:"fullName"`
 }
 
-type InputCreatTokenByEmailCredential struct {
+type CreatTokenByEmailCredentialInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type OutputToken struct {
+type Token struct {
 	Token string `json:"token"`
 }

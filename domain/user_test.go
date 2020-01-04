@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/onion-studio/onion-weekly/dto"
+
 	"github.com/jackc/pgx/v4"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -28,24 +30,24 @@ func TestCreateUserWithEmailCredential(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		input          InputCreateUser
-		wantUser       User
-		wantCredential EmailCredential
-		wantProfile    UserProfile
+		input          dto.CreateUserInput
+		wantUser       dto.User
+		wantCredential dto.EmailCredential
+		wantProfile    dto.UserProfile
 		wantErr        bool
 	}{
 		{
 			name: "First Test",
-			input: InputCreateUser{
+			input: dto.CreateUserInput{
 				Email:    "test@test.com",
 				Password: "test",
 				FullName: "Test Test",
 			},
-			wantCredential: EmailCredential{
+			wantCredential: dto.EmailCredential{
 				Email:          "test@test.com",
 				HashedPassword: "anything",
 			},
-			wantProfile: UserProfile{
+			wantProfile: dto.UserProfile{
 				FullName: "Test Test",
 			},
 			wantErr: false,
@@ -78,22 +80,22 @@ func TestCreateTokenByEmailCredential(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		input      InputCreatTokenByEmailCredential
-		wantOutput OutputToken
+		input      dto.CreatTokenByEmailCredentialInput
+		wantOutput dto.Token
 		wantErr    bool
 	}{
 		{
 			name: "Happy",
-			input: InputCreatTokenByEmailCredential{
+			input: dto.CreatTokenByEmailCredentialInput{
 				Email:    "test@test.com",
 				Password: "test1234",
 			},
-			wantOutput: OutputToken{},
+			wantOutput: dto.Token{},
 			wantErr:    false,
 		},
 		{
 			name: "Wrong Password",
-			input: InputCreatTokenByEmailCredential{
+			input: dto.CreatTokenByEmailCredentialInput{
 				Email:    "test@test.com",
 				Password: "wrong_password",
 			},
@@ -105,7 +107,7 @@ func TestCreateTokenByEmailCredential(t *testing.T) {
 			db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
 				_, _, _, err := srv.CreateUserWithEmailCredential(
 					tx,
-					InputCreateUser{
+					dto.CreateUserInput{
 						Email:    "test@test.com",
 						Password: "test1234",
 						FullName: "Test Test",

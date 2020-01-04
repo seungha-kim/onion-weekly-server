@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/onion-studio/onion-weekly/dto"
+
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -43,7 +45,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			_, _, _, err = userService.CreateUserWithEmailCredential(tx, domain.InputCreateUser{
+			_, _, _, err = userService.CreateUserWithEmailCredential(tx, dto.CreateUserInput{
 				Email:    email,
 				Password: string(password),
 				FullName: fullName,

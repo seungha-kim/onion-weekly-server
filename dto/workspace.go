@@ -5,7 +5,7 @@ type CreateWorkspaceInput struct {
 }
 
 type Workspace struct {
-	ID        UUID        `json:"id"`
+	Id        UUID        `json:"id"`
 	Name      string      `json:"name"`
 	CreatedBy UUID        `json:"-"`
 	CreatedAt Timestamptz `json:"createdAt"`

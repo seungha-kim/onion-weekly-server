@@ -68,3 +68,25 @@ returning user_id, email, hashed_password, created_at;
 
 	return
 }
+
+func fixtureWorkspace1(tx pgx.Tx, user dto.User) (w dto.Workspace) {
+	ctx := context.Background()
+	var q string
+	q = `
+insert into workspaces (id, name, created_by)
+values ('EC2A7558-82E9-411A-85FF-55573486119C', 'Onion Studio', $1)
+returning id, name, created_by, created_at;
+`
+	if err := tx.QueryRow(ctx, q, user.Id).Scan(&w.Id, &w.Name, &w.CreatedBy, &w.CreatedAt); err != nil {
+		panic(err)
+	}
+
+	q = `
+insert into workspace_members (user_id, workspace_id)
+values ($1, $2);
+`
+	if _, err := tx.Exec(ctx, q, user.Id, w.Id); err != nil {
+		panic(err)
+	}
+	return
+}

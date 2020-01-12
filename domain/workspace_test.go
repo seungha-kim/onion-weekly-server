@@ -3,6 +3,8 @@ package domain
 import (
 	"testing"
 
+	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/onion-studio/onion-weekly/dto"
 	"github.com/stretchr/testify/require"
 
@@ -16,8 +18,9 @@ import (
 )
 
 type WorkspaceTestSuite struct {
-	appConf config.AppConf
 	suite.Suite
+	appConf          config.AppConf
+	pgxPool          *pgxpool.Pool
 	workspaceService *WorkspaceService
 }
 
@@ -26,8 +29,9 @@ func (s *WorkspaceTestSuite) SetupTest() {
 		fx.Provide(
 			config.NewTestAppConf,
 			NewWorkspaceService,
+			db.NewPgxPool,
 		),
-		fx.Populate(&s.appConf, &s.workspaceService),
+		fx.Populate(&s.appConf, &s.workspaceService, &s.pgxPool),
 		fx.NopLogger,
 	)
 }
@@ -35,7 +39,7 @@ func (s *WorkspaceTestSuite) SetupTest() {
 func (s *WorkspaceTestSuite) TestWorkspaceService() {
 	t := s.T()
 	t.Run("워크스페이스를 생성할 수 있다", func(t *testing.T) {
-		db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
+		db.RollbackForTest(s.pgxPool, func(tx pgx.Tx) {
 			user, _, _ := fixtureUser1(tx)
 			input := dto.CreateWorkspaceInput{Name: "Test Workspace"}
 			w, err := s.workspaceService.createWorkspace(tx, user, input)
@@ -49,7 +53,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 	})
 
 	t.Run("본인의 워크스페이스만 반환되어야 한다", func(t *testing.T) {
-		db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
+		db.RollbackForTest(s.pgxPool, func(tx pgx.Tx) {
 			user1, _, _ := fixtureUser1(tx)
 			user2, _, _ := fixtureUser2(tx)
 			input := dto.CreateWorkspaceInput{Name: "Test Workspace"}
@@ -64,7 +68,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 	})
 
 	t.Run("다른 사용자를 워크스페이스의 멤버로 가입시킬 수 있다", func(t *testing.T) {
-		db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
+		db.RollbackForTest(s.pgxPool, func(tx pgx.Tx) {
 			user1, _, _ := fixtureUser1(tx)
 			user2, _, _ := fixtureUser2(tx)
 			workspace1 := fixtureWorkspace1(tx, user1)
@@ -83,7 +87,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 	})
 
 	t.Run("이미 멤버인 사용자를 재가입시키려고 시도하면 에러", func(t *testing.T) {
-		db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
+		db.RollbackForTest(s.pgxPool, func(tx pgx.Tx) {
 			user1, _, _ := fixtureUser1(tx)
 			workspace1 := fixtureWorkspace1(tx, user1)
 
@@ -93,7 +97,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 	})
 
 	t.Run("멤버가 아닌 사람이 초대 시도를 하면 에러", func(t *testing.T) {
-		db.RollbackForTest(pgxPool, func(tx pgx.Tx) {
+		db.RollbackForTest(s.pgxPool, func(tx pgx.Tx) {
 			user1, _, _ := fixtureUser1(tx)
 			user2, _, _ := fixtureUser2(tx)
 			workspace1 := fixtureWorkspace1(tx, user1)
@@ -102,6 +106,10 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 			require.Error(t, err)
 		})
 	})
+
+	// MVP
+
+	// 멤버는 워크스페이스의 이름을 변경할 수 있다
 
 	// Next
 

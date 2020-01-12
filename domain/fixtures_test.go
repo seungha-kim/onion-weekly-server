@@ -90,3 +90,51 @@ values ($1, $2);
 	}
 	return
 }
+
+func fixtureRecurring1(tx pgx.Tx, workspace dto.Workspace) (r dto.Recurring) {
+	ctx := context.Background()
+	q := `
+insert into recurrings (id, workspace_id, title, interval)
+values ('0B8B8599-6E14-4A66-9E5D-3620D3551B62', $1, '우유 사기', 4)
+returning id, workspace_id, title, "interval", created_at;
+`
+	err := tx.
+		QueryRow(ctx, q, workspace.Id).
+		Scan(&r.Id, &r.WorkspaceId, &r.Title, &r.Interval, &r.CreatedAt)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func fixtureRecurring2(tx pgx.Tx, workspace dto.Workspace) (r dto.Recurring) {
+	ctx := context.Background()
+	q := `
+insert into recurrings (id, workspace_id, title, interval)
+values ('F062DCD1-5967-4448-AD8F-07AD0EFEB717', $1, '화분에 물 주기', 4)
+returning id, workspace_id, title, "interval", created_at;
+`
+	err := tx.
+		QueryRow(ctx, q, workspace.Id).
+		Scan(&r.Id, &r.WorkspaceId, &r.Title, &r.Interval, &r.CreatedAt)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func fixtureRecurringRecord(tx pgx.Tx, user dto.User, recurring dto.Recurring, createdAt dto.Timestamptz) (rr dto.RecurringRecord) {
+	ctx := context.Background()
+	q := `
+insert into recurring_records (description, actor_id, interval_snapshot, created_at, recurring_id)
+values ('test', $1, $2, $3, $4)
+returning id, description, actor_id, interval_snapshot, created_at, recurring_id;
+`
+	err := tx.
+		QueryRow(ctx, q, user.Id, recurring.Interval, createdAt, recurring.Id).
+		Scan(&rr.Id, &rr.Description, &rr.ActorId, &rr.IntervalSnapshot, &rr.CreatedAt, &rr.RecurringId)
+	if err != nil {
+		panic(err)
+	}
+	return
+}

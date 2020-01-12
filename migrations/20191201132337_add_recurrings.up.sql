@@ -9,8 +9,10 @@ create table recurrings
 
 create table recurring_records
 (
-    id           uuid primary key default uuid_generate_v4(),
-    description text not null,
-    actor_id     uuid null references users (id),
-    interval_snapshot int
-)
+    id                uuid primary key default uuid_generate_v4(),
+    description       text not null,
+    actor_id          uuid not null references users (id),
+    interval_snapshot int,
+    created_at        ts_default,
+    recurring_id      uuid not null references recurrings (id)
+);

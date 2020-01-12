@@ -18,6 +18,14 @@ func NewWorkspaceService(appConf config.AppConf) *WorkspaceService {
 	return &WorkspaceService{appConf: appConf}
 }
 
+func (srv *WorkspaceService) checkReadPermission(tx pgx.Tx, user dto.User, workspace dto.Workspace) error {
+	isMember, err := srv.checkMembership(tx, workspace, user)
+	if !isMember || err != nil {
+		return errors.New("forbidden")
+	}
+	return nil
+}
+
 func (srv *WorkspaceService) createWorkspace(
 	tx pgx.Tx,
 	actor dto.User,
@@ -111,4 +119,18 @@ values ($1, $2);
 		return err
 	}
 	return nil
+}
+
+func (srv *WorkspaceService) GetWorkspaceById(
+	tx pgx.Tx,
+	id dto.UUID) (workspace dto.Workspace, err error) {
+	ctx := context.Background()
+	q := `
+select id, name, created_by, created_at from workspaces
+where id = $1;
+`
+	err = tx.
+		QueryRow(ctx, q, id).
+		Scan(&workspace.Id, &workspace.Name, &workspace.CreatedBy, &workspace.CreatedAt)
+	return
 }

@@ -137,11 +137,38 @@ order by (extract(epoch from now()) - coalesce(extract(epoch from lr.created_at)
 	return
 }
 
+func (srv *RecurringService) GetRecurringById(tx pgx.Tx, user dto.User, id dto.UUID) (recurring dto.Recurring, err error) {
+	ctx := context.Background()
+	const q = `
+select r.id, r.workspace_id, r.title, r.interval, r.created_at from recurrings r
+where r.id = $1;
+`
+	if err = tx.QueryRow(ctx, q, id).Scan(&recurring.Id, &recurring.WorkspaceId, &recurring.Title, &recurring.Interval, &recurring.CreatedAt); err != nil {
+		return
+	}
+	if err = srv.checkReadPermission(tx, user, recurring); err != nil {
+		return
+	}
+	return
+}
+
 func (srv *RecurringService) checkCreatePermission(tx pgx.Tx, user dto.User, workspace dto.Workspace) error {
 	return srv.workspaceService.checkReadPermission(tx, user, workspace)
 }
 
 func (srv *RecurringService) checkUpdatePermission(tx pgx.Tx, user dto.User, recurring dto.Recurring) error {
+	workspace, err := srv.workspaceService.GetWorkspaceById(tx, recurring.WorkspaceId)
+	if err != nil {
+		return errors.New("forbidden")
+	}
+	isMember, err := srv.workspaceService.checkMembership(tx, workspace, user)
+	if !isMember || err != nil {
+		return errors.New("forbidden")
+	}
+	return nil
+}
+
+func (srv *RecurringService) checkReadPermission(tx pgx.Tx, user dto.User, recurring dto.Recurring) error {
 	workspace, err := srv.workspaceService.GetWorkspaceById(tx, recurring.WorkspaceId)
 	if err != nil {
 		return errors.New("forbidden")

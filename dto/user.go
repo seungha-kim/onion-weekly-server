@@ -31,3 +31,7 @@ type CreatTokenByEmailCredentialInput struct {
 type Token struct {
 	Token string `json:"token"`
 }
+
+type FindUserByIdInput struct {
+	Id UUID `json:"id"`
+}

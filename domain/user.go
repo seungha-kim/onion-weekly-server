@@ -116,3 +116,23 @@ func (srv *UserService) CreateTokenByEmailCredential(
 	output.Token = tokenString
 	return
 }
+
+// language=PostgreSQL
+const sqlSelectUsersByEmail = `
+select u.id, u.created_at from users u
+where u.id = $1;
+`
+
+func (srv *UserService) FindUserById(
+	tx pgx.Tx,
+	input dto.FindUserByIdInput,
+) (user dto.User, err error) {
+	ctx := context.Background()
+
+	err = tx.
+		QueryRow(ctx, sqlSelectUsersByEmail, input.Id).
+		Scan(&user.Id, &user.CreatedAt)
+
+	// TODO: 없으면 어떻게 되나?
+	return
+}

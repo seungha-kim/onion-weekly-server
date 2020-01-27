@@ -23,6 +23,8 @@ func NewServer(
 	appConf config.AppConf,
 	helloHandler *helloHandler,
 	authHandler *authHandler,
+	workspaceHandler *workspaceHandler,
+	recurringHandler *recurringHandler,
 ) *Server {
 	s := &Server{echo: echo.New(), appConf: appConf}
 	s.echo.Pre(em.RemoveTrailingSlashWithConfig(em.TrailingSlashConfig{
@@ -32,6 +34,8 @@ func NewServer(
 	s.echo.Use(em.Recover())
 	authHandler.Register(s.echo.Group("/auth"))
 	helloHandler.Register(s.echo.Group("/hello"))
+	workspaceHandler.Register(s.echo.Group("/workspaces"))
+	recurringHandler.Register(s.echo.Group(""))
 	s.echo.Debug = appConf.Debug
 
 	lc.Append(fx.Hook{

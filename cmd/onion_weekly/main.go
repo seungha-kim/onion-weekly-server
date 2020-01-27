@@ -18,7 +18,11 @@ func main() {
 			web.NewServer,
 			web.NewAuthHandler,
 			web.NewHelloHandler,
+			web.NewWorkspaceHandler,
+			web.NewRecurringHandler,
 			domain.NewUserService,
+			domain.NewWorkspaceService,
+			domain.NewRecurringService,
 		),
 		fx.Invoke(func(_ *web.Server) {}),
 	}

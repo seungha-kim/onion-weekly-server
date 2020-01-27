@@ -26,7 +26,7 @@ func (srv *WorkspaceService) checkReadPermission(tx pgx.Tx, user dto.User, works
 	return nil
 }
 
-func (srv *WorkspaceService) createWorkspace(
+func (srv *WorkspaceService) CreateWorkspace(
 	tx pgx.Tx,
 	actor dto.User,
 	input dto.CreateWorkspaceInput,
@@ -54,7 +54,7 @@ values ($1, $2);
 	return
 }
 
-func (srv *WorkspaceService) findWorkspacesByMembership(
+func (srv *WorkspaceService) FindWorkspacesByMembership(
 	tx pgx.Tx,
 	user dto.User,
 ) (workspaces []dto.Workspace, err error) {
@@ -98,7 +98,7 @@ where wm.workspace_id = $1 and wm.user_id = $2;
 	return count > 0, nil
 }
 
-func (srv *WorkspaceService) invite(
+func (srv *WorkspaceService) Invite(
 	tx pgx.Tx,
 	workspace dto.Workspace,
 	actor dto.User,

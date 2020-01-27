@@ -42,11 +42,11 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 		db.RollbackForTest(s.pgxPool, func(tx pgx.Tx) {
 			user, _, _ := fixtureUser1(tx)
 			input := dto.CreateWorkspaceInput{Name: "Test Workspace"}
-			w, err := s.workspaceService.createWorkspace(tx, user, input)
+			w, err := s.workspaceService.CreateWorkspace(tx, user, input)
 			require.NoError(t, err)
 			require.Equal(t, "Test Workspace", w.Name)
 
-			workspaces, err := s.workspaceService.findWorkspacesByMembership(tx, user)
+			workspaces, err := s.workspaceService.FindWorkspacesByMembership(tx, user)
 			require.NoError(t, err)
 			require.Len(t, workspaces, 1)
 		})
@@ -57,11 +57,11 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 			user1, _, _ := fixtureUser1(tx)
 			user2, _, _ := fixtureUser2(tx)
 			input := dto.CreateWorkspaceInput{Name: "Test Workspace"}
-			w, err := s.workspaceService.createWorkspace(tx, user1, input)
+			w, err := s.workspaceService.CreateWorkspace(tx, user1, input)
 			require.NoError(t, err)
 			require.Equal(t, "Test Workspace", w.Name)
 
-			workspaces, err := s.workspaceService.findWorkspacesByMembership(tx, user2)
+			workspaces, err := s.workspaceService.FindWorkspacesByMembership(tx, user2)
 			require.NoError(t, err)
 			require.Len(t, workspaces, 0)
 		})
@@ -77,7 +77,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 			require.NoError(t, err)
 			require.False(t, isMember)
 
-			err = s.workspaceService.invite(tx, workspace1, user1, user2)
+			err = s.workspaceService.Invite(tx, workspace1, user1, user2)
 			require.NoError(t, err)
 
 			isMember, err = s.workspaceService.checkMembership(tx, workspace1, user2)
@@ -91,7 +91,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 			user1, _, _ := fixtureUser1(tx)
 			workspace1 := fixtureWorkspace1(tx, user1)
 
-			err := s.workspaceService.invite(tx, workspace1, user1, user1)
+			err := s.workspaceService.Invite(tx, workspace1, user1, user1)
 			require.Error(t, err)
 		})
 	})
@@ -102,7 +102,7 @@ func (s *WorkspaceTestSuite) TestWorkspaceService() {
 			user2, _, _ := fixtureUser2(tx)
 			workspace1 := fixtureWorkspace1(tx, user1)
 
-			err := s.workspaceService.invite(tx, workspace1, user2, user2)
+			err := s.workspaceService.Invite(tx, workspace1, user2, user2)
 			require.Error(t, err)
 		})
 	})

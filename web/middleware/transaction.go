@@ -42,7 +42,7 @@ func Transaction(appConf config.AppConf, pgxPool *pgxpool.Pool) echo.MiddlewareF
 				}
 				c.Set("tx", tx)
 				if err = next(c); err != nil {
-					err = tx.Rollback(ctx)
+					_ = tx.Rollback(ctx)
 					return
 				}
 				if err = tx.Commit(ctx); err != nil {

@@ -98,6 +98,10 @@ func (srv *UserService) CreateTokenByEmailCredential(
 		QueryRow(ctx, sqlSelectEmailCredentialsByEmail, input.Email).
 		Scan(&ec.UserId, &ec.Email, &ec.HashedPassword, &ec.CreatedAt)
 
+	if err != nil {
+		return
+	}
+
 	if err = bcrypt.CompareHashAndPassword([]byte(ec.HashedPassword), []byte(input.Password)); err != nil {
 		return
 	}

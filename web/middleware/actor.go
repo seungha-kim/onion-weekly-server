@@ -5,7 +5,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/onion-studio/onion-weekly/domain"
 	"github.com/onion-studio/onion-weekly/dto"
 )

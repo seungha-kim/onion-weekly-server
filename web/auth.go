@@ -3,6 +3,8 @@ package web
 import (
 	"net/http"
 
+	"github.com/onion-studio/onion-weekly/web/middleware"
+
 	"github.com/onion-studio/onion-weekly/dto"
 
 	"github.com/onion-studio/onion-weekly/config"
@@ -11,10 +13,9 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jackc/pgx/v4"
-	"github.com/labstack/echo"
-	em "github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	em "github.com/labstack/echo/v4/middleware"
 	"github.com/onion-studio/onion-weekly/domain"
-	"github.com/onion-studio/onion-weekly/web/middleware"
 )
 
 type authHandler struct {

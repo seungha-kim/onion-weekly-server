@@ -3,8 +3,8 @@ package web
 import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/labstack/echo"
-	em "github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	em "github.com/labstack/echo/v4/middleware"
 	"github.com/onion-studio/onion-weekly/config"
 	"github.com/onion-studio/onion-weekly/domain"
 	"github.com/onion-studio/onion-weekly/dto"

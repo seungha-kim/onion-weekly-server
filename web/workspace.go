@@ -2,14 +2,14 @@ package web
 
 import (
 	"github.com/jackc/pgx/v4"
-	em "github.com/labstack/echo/middleware"
+	em "github.com/labstack/echo/v4/middleware"
 	"github.com/onion-studio/onion-weekly/dto"
 
 	"github.com/onion-studio/onion-weekly/config"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/onion-studio/onion-weekly/domain"
 	"github.com/onion-studio/onion-weekly/web/middleware"
 )

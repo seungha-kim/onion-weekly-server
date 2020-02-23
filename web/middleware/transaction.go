@@ -6,7 +6,7 @@ import (
 	"github.com/onion-studio/onion-weekly/config"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 func Transaction(appConf config.AppConf, pgxPool *pgxpool.Pool) echo.MiddlewareFunc {
